@@ -1,12 +1,23 @@
 # coding:utf-8
 import numpy as np
+import argparse
+import sys
 
-NUM_RACK = 8  # 货架排数
-NUM_LAYER = 8  # 货架层数
-NUM_PACK = 20  # 每排货架最大托盘数
-NUM_RGV = 1  # 每排货架穿梭车数量
-NUM_FORK = 8  # 叉车数量
-NUM_TASK = 200  # 任务数
+parser = argparse.ArgumentParser()
+parser.add_argument('--rack', type=int, default=8)
+parser.add_argument('--layer', type=int, default=8)
+parser.add_argument('--pack', type=int, default=20)
+parser.add_argument('--rgv', type=int, default=1)
+parser.add_argument('--fork', type=int, default=4)
+parser.add_argument('--task', type=int, default=200)
+args = parser.parse_args()
+
+NUM_RACK = args.rack  # 货架排数
+NUM_LAYER = args.layer  # 货架层数
+NUM_PACK = args.pack  # 每排货架最大托盘数
+NUM_RGV = args.rgv  # 每排货架穿梭车数量
+NUM_FORK = args.fork  # 叉车数量
+NUM_TASK = args.task  # 任务数
 
 LENGTH = 1  # 货架单位托盘长度(m)
 WIDTH = 2  # 货架宽度(m)
@@ -20,6 +31,7 @@ DELT_T = 0.05  # 时间精度
 
 busy_FORK = np.zeros(NUM_FORK, dtype=float)  # 叉车忙率
 busy_RGV = np.zeros((NUM_LAYER, NUM_RACK), dtype=float)  # 穿梭车忙率
+statics = []
 
 
 def randomTask(layer, rack, pack, count):
@@ -105,6 +117,13 @@ def updateRGV(rgv_state):
     return rgv_state
 
 
+def disp_percent(percent):
+    hashes = '#' * int(percent / 100.0 * 20)
+    spaces = ' ' * (20 - len(hashes))
+    sys.stdout.write("\rPercent: [%s] %d%%" % (hashes + spaces, percent))
+    sys.stdout.flush()
+
+
 """初始化"""
 t = 0
 tasks = randomTask(NUM_LAYER, NUM_RACK, NUM_PACK, NUM_TASK)  # 生成随机任务(层,排,个)
@@ -156,10 +175,17 @@ while True:
     total_percent = 1 - np.sum(tasks)/np.sum(tasks_raw)  # 总完成度
 
     if t % 1 < 0.1:
-        print('clock:', int(t), end='')
-        print(" finish:", total_percent)
+        disp_percent(total_percent * 100)
 
     if total_percent == 1:
-        print('完成{}托盘，总用时{}s'.format(NUM_TASK, int(t)))
-        print('叉车平均忙率：{}\n穿梭车平均忙率{}'.format(np.mean(busy_FORK / t), np.mean(busy_RGV / t)))
+        statics = [int(t), np.mean(busy_FORK / t), np.mean(busy_RGV / t)]
+        print('\n[Finish] Use time {} s with params [{}]'.format(int(t), args))
+        print('[Static]{}'.format(statics))
         break
+
+# 保存数据
+with open(r'C:\Users\lw390\OneDrive\Documents\物流自动化技术\任务vs叉车\{}_{}.txt'.format(NUM_TASK, NUM_FORK), 'a') as fh:
+    for i in statics:
+        fh.write(str(i))
+        fh.write(' ')
+    fh.write('\n')
