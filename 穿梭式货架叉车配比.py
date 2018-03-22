@@ -174,8 +174,8 @@ while True:
 
     total_percent = 1 - np.sum(tasks)/np.sum(tasks_raw)  # 总完成度
 
-    if t % 1 < 0.1:
-        disp_percent(total_percent * 100)
+    # if t % 1 < 0.1:
+    #     disp_percent(total_percent * 100)
 
     if total_percent == 1:
         statics = [int(t), np.mean(busy_FORK / t), np.mean(busy_RGV / t)]
@@ -184,7 +184,7 @@ while True:
         break
 
 # 保存数据
-with open(r'C:\Users\lw390\OneDrive\Documents\物流自动化技术\任务vs叉车\{}_{}.txt'.format(NUM_TASK, NUM_FORK), 'a') as fh:
+with open(r'C:\Users\lw390\OneDrive\Documents\物流自动化技术\货架vs叉车\{}_{}_{}.txt'.format(NUM_TASK, NUM_FORK, NUM_RACK), 'a') as fh:
     for i in statics:
         fh.write(str(i))
         fh.write(' ')
